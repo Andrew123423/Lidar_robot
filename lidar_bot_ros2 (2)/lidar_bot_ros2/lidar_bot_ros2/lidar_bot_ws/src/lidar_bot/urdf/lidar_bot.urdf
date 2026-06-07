@@ -1,0 +1,234 @@
+<?xml version="1.0"?>
+<!--
+  Максимально простой робот:
+    - Прямоугольный корпус 0.3×0.2×0.1 м
+    - Два ведущих колеса + одно пассивное (caster)
+    - Лидар по центру сверху
+-->
+<robot name="lidar_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ─── Цвета ─────────────────────────────────────────────────── -->
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1"/>
+  </material>
+  <material name="red">
+    <color rgba="0.8 0.1 0.1 1"/>
+  </material>
+
+  <!-- ─── BASE LINK (корпус) ───────────────────────────────────── -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.30 0.20 0.10"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.30 0.20 0.10"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.0083" ixy="0" ixz="0"
+               iyy="0.0208" iyz="0"
+               izz="0.0267"/>
+    </inertial>
+  </link>
+
+  <!-- Gazebo: цвет корпуса -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <!-- ─── ЛЕВОЕ КОЛЕСО ─────────────────────────────────────────── -->
+  <link name="wheel_left">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <inertia ixx="0.00019" ixy="0" ixz="0"
+               iyy="0.00019" iyz="0"
+               izz="0.00038"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_wheel_left" type="continuous">
+    <parent link="base_link"/>
+    <child  link="wheel_left"/>
+    <origin xyz="0.0 0.12 -0.05" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <gazebo reference="wheel_left">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <!-- ─── ПРАВОЕ КОЛЕСО ────────────────────────────────────────── -->
+  <link name="wheel_right">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.05" length="0.04"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <inertia ixx="0.00019" ixy="0" ixz="0"
+               iyy="0.00019" iyz="0"
+               izz="0.00038"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_wheel_right" type="continuous">
+    <parent link="base_link"/>
+    <child  link="wheel_right"/>
+    <origin xyz="0.0 -0.12 -0.05" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <gazebo reference="wheel_right">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <!-- ─── ПАССИВНОЕ КОЛЕСО (caster) ────────────────────────────── -->
+  <link name="caster">
+    <visual>
+      <geometry>
+        <sphere radius="0.025"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.025"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.000025" ixy="0" ixz="0"
+               iyy="0.000025" iyz="0"
+               izz="0.000025"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_caster" type="fixed">
+    <parent link="base_link"/>
+    <child  link="caster"/>
+    <origin xyz="-0.12 0.0 -0.075" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="caster">
+    <material>Gazebo/Black</material>
+    <!-- Очень низкое трение, чтобы колёсико скользило свободно -->
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+  </gazebo>
+
+  <!-- ─── ЛИДАР ─────────────────────────────────────────────────── -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.04" length="0.06"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.04" length="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.00004" ixy="0" ixz="0"
+               iyy="0.00004" iyz="0"
+               izz="0.00008"/>
+    </inertial>
+  </link>
+
+  <joint name="joint_lidar" type="fixed">
+    <parent link="base_link"/>
+    <child  link="lidar_link"/>
+    <origin xyz="0.0 0.0 0.08" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Red</material>
+    <!-- ─── Плагин лидара ─────────────────────────────────────── -->
+    <sensor name="lidar" type="ray">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=scan</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ─── Плагин дифференциального привода ─────────────────────── -->
+  <gazebo>
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <left_joint>joint_wheel_left</left_joint>
+      <right_joint>joint_wheel_right</right_joint>
+      <wheel_separation>0.24</wheel_separation>
+      <wheel_diameter>0.10</wheel_diameter>
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+    </plugin>
+  </gazebo>
+
+</robot>
